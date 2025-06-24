@@ -3,16 +3,16 @@
 
 # ================== CONFIG START ==================
 # GitHub raw base path (change to your repo!)
-$repoBase = "https://raw.githubusercontent.com/yourusername/yourrepo/main/scripts"
+$repoBase = "https://raw.githubusercontent.com/PandaMerah/cchs-setup/refs/heads/main"
 
 # Define modules to run (add/remove scripts here)
 $modulesToRun = @(
     "1-setup-device-name.ps1",
-    # "2-debloat-windows.ps1",
-    # "3-setup-wifi.ps1",
+    "2-debloat-windows.ps1",
+    "3-setup-wifi.ps1",
     "4-set-timezone.ps1",
     "5-install-apps.ps1",
-    "6-uninstall-office.ps1",
+    # "6-uninstall-office.ps1",
     # "7-setup-office.ps1",
     # "8-setup-anydesk.ps1",
     # "9-setup-printers.ps1",
