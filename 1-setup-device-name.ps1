@@ -71,11 +71,4 @@ if ([string]::IsNullOrWhiteSpace($computerName)) {
 
 $requiresRestart = Set-ComputerName -NewName $computerName
 
-if ($requiresRestart) {
-    $restartPrompt = Read-Host "Do you want to restart now to apply the new computer name? (Y/N)"
-    if ($restartPrompt -eq 'Y' -or $restartPrompt -eq 'y') {
-        Restart-Computer -Force
-    }
-} else {
-    Write-Host "No restart needed." -ForegroundColor Green
-}
+if ($requiresRestart) {}
