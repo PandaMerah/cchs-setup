@@ -3,7 +3,7 @@
 
 # ================== CONFIG START ==================
 # GitHub raw base path (change to your repo!)
-$repoBase = "https://raw.githubusercontent.com/PandaMerah/cchs-setup/main"
+$repoBase = "https://raw.githubusercontent.com/PandaMerah/cchs-setup/main/"
 
 # Define modules to run (add/remove scripts here)
 $modulesToRun = @(
