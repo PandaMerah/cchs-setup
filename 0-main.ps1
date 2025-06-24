@@ -16,7 +16,8 @@ $modulesToRun = @(
     # "7-setup-office.ps1",
     # "8-setup-anydesk.ps1",
     # "9-setup-printers.ps1",
-    "10-set-wallpaper.ps1"
+    "10-set-wallpaper.ps1",
+    "999-output-details.ps1"
 )
 # ================== CONFIG END ====================
 
