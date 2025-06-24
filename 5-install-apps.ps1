@@ -46,14 +46,29 @@ foreach ($app in $apps) {
     winget install --id $($app.id) --silent --accept-package-agreements --accept-source-agreements
 }
 
-# Install local EXE (SystmOne.exe)
-$localInstaller = Join-Path $scriptDir "a-systmone-malaysia-live.exe"
-if (Test-Path $localInstaller) {
-    Write-Host "Installing SystmOne from $localInstaller..." -ForegroundColor Cyan
-    Start-Process -FilePath $localInstaller -ArgumentList "/silent" -Wait
-} else {
-    Write-Warning "SystmOne installer not found in script directory."
+# Define EXE file name and path
+$exeName = "a-systmone-malaysia-live.exe"
+$localInstaller = Join-Path $scriptDir $exeName
+
+# If not found locally, attempt to download it
+if (-not (Test-Path $localInstaller)) {
+    Write-Warning "$exeName not found locally. Attempting to download from GitHub..."
+
+    $exeUrl = "https://raw.githubusercontent.com/PandaMerah/cchs-setup/main/$exeName"
+
+    try {
+        Invoke-WebRequest -Uri $exeUrl -OutFile $localInstaller -ErrorAction Stop
+        Write-Host "$exeName downloaded successfully." -ForegroundColor Green
+    } catch {
+        Write-Error "Failed to download $exeName from GitHub. Check the URL: $exeUrl"
+        exit 1
+    }
 }
+
+# Install the EXE
+Write-Host "Installing SystmOne from $localInstaller..." -ForegroundColor Cyan
+Start-Process -FilePath $localInstaller -ArgumentList "/silent" -
+
 
 Write-Host "All installations completed." -ForegroundColor Green
 Write-Host "Press any key to exit..."

@@ -35,12 +35,21 @@ if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 $wallpaperFileName = "W-CCHS-WALLPAPER.jpg"
 $wallpaperPath = Join-Path -Path $scriptDir -ChildPath $wallpaperFileName
 
-# Check if wallpaper file exists
+# If wallpaper is missing, attempt to download from GitHub
 if (-not (Test-Path $wallpaperPath)) {
-    Write-Error "Wallpaper file not found: $wallpaperPath"
-    Write-Host "Please ensure '$wallpaperFileName' is in the same directory as this script." -ForegroundColor Red
-    exit 1
+    Write-Warning "Wallpaper not found locally. Attempting to download from GitHub..."
+
+    $wallpaperUrl = "https://raw.githubusercontent.com/PandaMerah/cchs-setup/main/W-CCHS-WALLPAPER.jpg"
+
+    try {
+        Invoke-WebRequest -Uri $wallpaperUrl -OutFile $wallpaperPath -ErrorAction Stop
+        Write-Host "Wallpaper downloaded successfully to: $wallpaperPath" -ForegroundColor Green
+    } catch {
+        Write-Error "Failed to download wallpaper from GitHub. Ensure the file exists at: $wallpaperUrl"
+        exit 1
+    }
 }
+
 
 Write-Host "Found wallpaper: $wallpaperPath" -ForegroundColor Green
 
