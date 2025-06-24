@@ -1,0 +1,66 @@
+;
+; KONICA MINOLTA CommonDriver PCL Driver UNF-File for Win
+;
+; Copyright (C) 2003 KONICA MINOLTA, INC.
+
+[Version]
+Signature="$Windows NT$"
+Provider=%KM%
+ClassGUID={4D36E979-E325-11CE-BFC1-08002BE10318}
+Class=Printer
+CatalogFile=KOBX9J__.CAT
+DriverVer=01/28/2021,1.0.6.0
+
+[DriverInfo]
+DriverName1=KONICA MINOLTA CommonDriver PCL
+DriverCode=0009
+
+[Uninstall.DriverName1]
+DelReg=Environment_Reg.DriverName1
+DelFiles=KOBX9_COPY,PRINT_MONITOR
+
+[Environment_Reg.DriverName1]
+HKLM,"System\CurrentControlSet\Control\Print\Printers","StartOnBoot"
+HKCU,"SoftWare\KONICA MINOLTA\KONICA MINOLTA CommonDriver PCL"
+
+[KOBX9_COPY]
+KOBX9J_B.DLL,,,1
+KOBX9J_C.DLL,,,1
+KOBX9J_D.DLL,,,1
+KOBX9J_E.DLL,,,1
+KOBX9J_F.DLL,,,1
+KOBX9J_G.DLL,,,1
+KOBX9J_J.DLL,,,1
+KOBX9J_M.DLL,,,1
+KOBX9J_N.DLL,,,1
+KOBX9J_O.DLL,,,1
+KOBX9J_R.DLL,,,1
+KOBX9J_S.DLL,,,1
+KOBX9J_U.DLL,,,1
+KOBX9J_W.DLL,,,1
+KOBX9J_X.DLL,,,1
+KOBX9J_C.KPD,,,1
+KOBX9J_DE.KPD,,,1
+KOBX9J_DJ.KPD,,,1
+KOBX9J_DD.KPD,,,1
+KOBX9J_DES.KPD,,,1
+KOBX9J_DF.KPD,,,1
+KOBX9J_DI.KPD,,,1
+KOBX9J_DK.KPD,,,1
+KOBX9J_DCN.KPD,,,1
+KOBX9J_DTW.KPD,,,1
+KOBX9J_M.KPD,,,1
+KOBX9J__.KPD,,,1
+KOBX9J__.CHM,,,1
+KOBX9J__.UNF,,,1
+
+[PRINT_MONITOR]
+KOBX9J_L.DLL,,,1
+
+[DestinationDirs]
+DefaultDestDir=66000
+PRINT_MONITOR=66002
+
+[Strings]
+KM="KONICA MINOLTA"
+DiskName="KONICA MINOLTA COMMON Driver Disk"

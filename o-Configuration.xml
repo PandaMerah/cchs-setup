@@ -1,0 +1,22 @@
+<Configuration ID="f545ef36-0f5b-4fab-8c9e-5e0bbbfcf975">
+  <Add OfficeClientEdition="64" Channel="PerpetualVL2024" MigrateArch="TRUE">
+    <Product ID="ProPlus2024Volume" PIDKEY="JH7NK-RBY8Q-GXW6R-K2MBF-BY883">
+      <Language ID="en-us" />
+      <Language ID="ms-my" />
+      <ExcludeApp ID="Lync" />
+    </Product>
+    <Product ID="ProofingTools">
+      <Language ID="en-gb" />
+      <Language ID="en-us" />
+      <Language ID="ms-my" />
+    </Product>
+  </Add>
+  <Property Name="SharedComputerLicensing" Value="0" />
+  <Property Name="FORCEAPPSHUTDOWN" Value="FALSE" />
+  <Property Name="DeviceBasedLicensing" Value="0" />
+  <Property Name="SCLCacheOverride" Value="0" />
+  <Property Name="AUTOACTIVATE" Value="1" />
+  <Updates Enabled="TRUE" />
+  <RemoveMSI />
+  <Display Level="Full" AcceptEULA="TRUE" />
+</Configuration>
