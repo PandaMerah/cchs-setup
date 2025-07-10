@@ -38,7 +38,8 @@ $apps = @(
     @{ name = "AnyDesk"; id = "AnyDesk.AnyDesk" },
     @{ name = "WinRAR"; id = "RARLab.WinRAR" },
     @{ name = "Box Drive"; id = "Box.BoxDrive" },
-    @{ name = "Adobe Acrobat Reader"; id = "Adobe.Acrobat.Reader.64-bit" }
+    @{ name = "Adobe Acrobat Reader"; id = "Adobe.Acrobat.Reader.64-bit" },
+    @{ name = "Whatsapp"; id= "9NKSQGP7F2NH" }
 )
 
 foreach ($app in $apps) {
@@ -67,9 +68,9 @@ if (-not (Test-Path $localInstaller)) {
 
 # Install the EXE
 Write-Host "Installing SystmOne from $localInstaller..." -ForegroundColor Cyan
-Start-Process -FilePath $localInstaller -ArgumentList "/silent" -
+Start-Process -FilePath $localInstaller -ArgumentList "/silent"
 
 
-Write-Host "All installations completed." -ForegroundColor Green
-Write-Host "Press any key to exit..."
-$null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+Write-Host "All apps installations completed." -ForegroundColor Green
+# Write-Host "Press any key to exit..."
+# $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")

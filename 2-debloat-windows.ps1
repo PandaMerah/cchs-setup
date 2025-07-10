@@ -1,5 +1,5 @@
 # Debloat Windows
-# This script performs selected cleanup tasks (widgets, taskbar tweaks, etc.)
+# This script performs selected cleanup tasks and now also removes OneDrive and linked Microsoft account
 
 # Ensure we're running with admin privileges
 $scriptPath = $MyInvocation.MyCommand.Definition
@@ -45,34 +45,6 @@ if (Test-Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo")
     Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo" -Name "Enabled" -Type DWord -Value 0
 }
 
-# Disable background apps
-# Write-Host "Disabling background apps..." -ForegroundColor Yellow
-# Get-ChildItem -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications" | ForEach-Object {
-#     Set-ItemProperty -Path $_.PsPath -Name "Disabled" -Type DWord -Value 1
-#     Set-ItemProperty -Path $_.PsPath -Name "DisabledByUser" -Type DWord -Value 1
-# }
-
-# # Disable scheduled tasks (CEIP etc.)
-# Write-Host "Disabling scheduled tasks..." -ForegroundColor Yellow
-# $tasks = @(
-#     "Microsoft\Windows\Application Experience\Microsoft Compatibility Appraiser",
-#     "Microsoft\Windows\Application Experience\ProgramDataUpdater",
-#     "Microsoft\Windows\Autochk\Proxy",
-#     "Microsoft\Windows\Customer Experience Improvement Program\Consolidator",
-#     "Microsoft\Windows\Customer Experience Improvement Program\UsbCeip",
-#     "Microsoft\Windows\DiskDiagnostic\Microsoft-Windows-DiskDiagnosticDataCollector"
-# )
-# foreach ($task in $tasks) {
-#     $parts = $task.Split('\')
-#     $name = $parts[-1]
-#     $path = $parts[0..($parts.Length-2)] -join '\'
-#     try {
-#         Disable-ScheduledTask -TaskName "$name" -TaskPath "\$path\" -ErrorAction SilentlyContinue
-#     } catch {
-#         Write-Host "Failed to disable task $name: $_" -ForegroundColor Red
-#     }
-# }
-
 # Remove Weather/Widgets (Windows 11 style)
 Write-Host "Removing Widgets from Taskbar..." -ForegroundColor Yellow
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarWidgets" -Type DWord -Value 0 -Force
@@ -86,17 +58,40 @@ Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer
 # Set search to icon only
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Search" -Name "SearchboxTaskbarMode" -Type DWord -Value 1 -Force
 
-# # Clear pinned taskbar items
-# $TaskbarPath = "$env:APPDATA\Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar"
-# Remove-Item "$TaskbarPath\*" -Force -ErrorAction SilentlyContinue
+# Clear Start Menu pinned shortcuts
+Remove-Item "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\*" -Recurse -Force -ErrorAction SilentlyContinue
 
-# # Clear Start Menu pinned shortcuts
-# Remove-Item "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\*" -Recurse -Force -ErrorAction SilentlyContinue
+# Suppress Recommended section (experimental)
+New-Item -Path "HKCU:\Software\Policies\Microsoft\Windows\Explorer" -Force | Out-Null
+New-ItemProperty -Path "HKCU:\Software\Policies\Microsoft\Windows\Explorer" -Name "HideRecommendedSection" -Type DWord -Value 1 -Force
 
-# # Suppress Recommended section (experimental)
-# New-Item -Path "HKCU:\Software\Policies\Microsoft\Windows\Explorer" -Force | Out-Null
-# New-ItemProperty -Path "HKCU:\Software\Policies\Microsoft\Windows\Explorer" -Name "HideRecommendedSection" -Type DWord -Value 1 -Force
+# === REMOVE ONEDRIVE ===
+Write-Host "Uninstalling OneDrive..." -ForegroundColor Yellow
+Stop-Process -Name OneDrive -ErrorAction SilentlyContinue
+Start-Sleep -Seconds 2
+$onedriveSetup = "$env:SystemRoot\System32\OneDriveSetup.exe"
+if (Test-Path $onedriveSetup) {
+    Start-Process -FilePath $onedriveSetup -ArgumentList "/uninstall" -NoNewWindow -Wait
+    Write-Host "OneDrive uninstalled." -ForegroundColor Green
+} else {
+    Write-Warning "OneDrive setup executable not found."
+}
 
-# Restart Explorer to apply changes
-# Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue
-Write-Host "Windows customization completed. Explorer will restart shortly." -ForegroundColor Green
+# Remove leftover OneDrive folders
+Remove-Item "$env:USERPROFILE\OneDrive" -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item "$env:LOCALAPPDATA\Microsoft\OneDrive" -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item "$env:ProgramData\Microsoft OneDrive" -Recurse -Force -ErrorAction SilentlyContinue
+
+# === REMOVE MICROSOFT ACCOUNT LINKED TO DEVICE (if any) ===
+Write-Host "Attempting to remove Microsoft account (if linked)..." -ForegroundColor Yellow
+$users = Get-CimInstance -Class Win32_UserAccount | Where-Object { $_.Name -like '*@*' -and $_.LocalAccount -eq $false }
+foreach ($user in $users) {
+    try {
+        Write-Host "Removing user: $($user.Name)" -ForegroundColor Cyan
+        net user $($user.Name) /delete
+    } catch {
+        Write-Warning "Failed to remove user: $($user.Name). Error: $_"
+    }
+}
+
+Write-Host "Debloat script completed. Some changes may require restart." -ForegroundColor Green

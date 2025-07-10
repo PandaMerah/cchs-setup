@@ -194,4 +194,4 @@ catch {
     Write-Host "Desktop refresh may be required manually." -ForegroundColor Yellow
 }
 
-Write-Host "Script completed successfully!" -ForegroundColor Green
+Write-Host "Set wallpaper completed successfully!" -ForegroundColor Green

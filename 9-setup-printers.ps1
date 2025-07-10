@@ -1,16 +1,14 @@
-# Setup PCL6 Printers
-# This script adds PCL6 printers to the system
+# Konika and Sharp Printer Setup Script (Silent)
+# Assumes script is run as Administrator
 
-# Ensure we're running with admin privileges
 # Get the script path
-# Get current script path
 $scriptPath = $MyInvocation.MyCommand.Definition
 $scriptDir = Split-Path -Parent $scriptPath
 
 # Check for admin privileges
 if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
     Write-Host "This script requires administrator privileges. Attempting to elevate..." -ForegroundColor Yellow
-    
+
     $escapedScriptPath = '"' + $scriptPath + '"'
 
     $psi = New-Object System.Diagnostics.ProcessStartInfo
@@ -37,122 +35,64 @@ if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 Write-Host "Running with administrator privileges." -ForegroundColor Green
 Write-Host "Execution Policy: $(Get-ExecutionPolicy)" -ForegroundColor Cyan
 
-# Function to add PCL6 printer
-function Add-PCL6Printer {
+# Ensure correct working directory
+Set-Location -Path $PSScriptRoot
+
+# Function to install driver and printer
+function Install-Printer {
     param (
-        [Parameter(Mandatory=$true)]
-        [string]$PrinterName,
-        
-        [Parameter(Mandatory=$true)]
+        [string]$DriverInfPath,
         [string]$DriverName,
-        
-        [Parameter(Mandatory=$true)]
-        [string]$PortName,
-        
-        [Parameter(Mandatory=$true)]
-        [string]$IPAddress
+        [string]$PrinterName,
+        [string]$PrinterIP
     )
-    
-    try {
-        # Check if the printer port already exists
-        $portExists = Get-PrinterPort -Name $PortName -ErrorAction SilentlyContinue
-        
-        if (-not $portExists) {
-            # Create a new printer port
-            Write-Host "Creating printer port $PortName with IP address $IPAddress..." -ForegroundColor Yellow
-            Add-PrinterPort -Name $PortName -PrinterHostAddress $IPAddress -PortNumber 9100
-        } else {
-            Write-Host "Printer port $PortName already exists." -ForegroundColor Green
-        }
-        
-        # Check if the printer driver is installed
-        $driverInstalled = Get-PrinterDriver -Name $DriverName -ErrorAction SilentlyContinue
-        
-        if (-not $driverInstalled) {
-            Write-Host "Printer driver $DriverName is not installed. Please install it first." -ForegroundColor Red
-            Write-Host "You can download the driver from the printer manufacturer's website." -ForegroundColor Yellow
-            return $false
-        }
-        
-        # Check if the printer already exists
-        $printerExists = Get-Printer -Name $PrinterName -ErrorAction SilentlyContinue
-        
-        if (-not $printerExists) {
-            # Add the printer
-            Write-Host "Adding printer $PrinterName..." -ForegroundColor Yellow
-            Add-Printer -Name $PrinterName -DriverName $DriverName -PortName $PortName
-            Write-Host "Printer $PrinterName added successfully." -ForegroundColor Green
-        } else {
-            Write-Host "Printer $PrinterName already exists." -ForegroundColor Green
-        }
-        
-        return $true
+
+    $portName = "IP_$($PrinterIP.Replace('.', '_'))"
+
+    # Install driver via PrintUIEntry to ensure proper registration
+    if (Test-Path $DriverInfPath) {
+        Write-Host "Installing driver $DriverName from: $DriverInfPath" -ForegroundColor Cyan
+        Start-Process -FilePath "rundll32.exe" -ArgumentList "printui.dll,PrintUIEntry /ia /m `"$DriverName`" /h `"x64`" /v `"Type 3 - User Mode`" /f `"$DriverInfPath`"" -Wait -NoNewWindow
+    } else {
+        Write-Warning "Driver INF not found: $DriverInfPath"
+        return
     }
-    catch {
-        Write-Host "Error adding printer: $_" -ForegroundColor Red
-        return $false
+
+    # Create printer port if it doesn't exist
+    if (-not (Get-PrinterPort -Name $portName -ErrorAction SilentlyContinue)) {
+        Write-Host "Creating port: $portName ($PrinterIP)" -ForegroundColor Cyan
+        Add-PrinterPort -Name $portName -PrinterHostAddress $PrinterIP -PortNumber 9100
+    } else {
+        Write-Host "Port $portName already exists." -ForegroundColor Green
+    }
+
+    # Add the printer if not already added
+    if (-not (Get-Printer -Name $PrinterName -ErrorAction SilentlyContinue)) {
+        Write-Host "Adding printer: $PrinterName" -ForegroundColor Cyan
+        Add-Printer -Name $PrinterName -DriverName $DriverName -PortName $portName
+    } else {
+        Write-Host "Printer $PrinterName already exists." -ForegroundColor Yellow
     }
 }
 
-# Display menu for common PCL6 printer drivers
-function Show-DriverMenu {
-    Write-Host "Common PCL6 Printer Drivers:" -ForegroundColor Cyan
-    Write-Host "[1] HP Universal Printing PCL 6"
-    Write-Host "[2] Brother Universal Printer (PCL)"
-    Write-Host "[3] Canon Generic Plus PCL6"
-    Write-Host "[4] Lexmark Universal v2 XL"
-    Write-Host "[5] Xerox Global Print Driver PCL6"
-    Write-Host "[6] Kyocera PCL6 Universal"
-    Write-Host "[7] Custom (enter driver name manually)"
-    
-    $choice = Read-Host "Select a printer driver (1-7)"
-    
-    switch ($choice) {
-        1 { return "HP Universal Printing PCL 6" }
-        2 { return "Brother Universal Printer (PCL)" }
-        3 { return "Canon Generic Plus PCL6" }
-        4 { return "Lexmark Universal v2 XL" }
-        5 { return "Xerox Global Print Driver PCL6" }
-        6 { return "Kyocera PCL6 Universal" }
-        7 { return Read-Host "Enter the exact name of the installed printer driver" }
-        default { return "HP Universal Printing PCL 6" }
-    }
-}
+# === KONIKA MINOLTA ===
+Install-Printer `
+    -DriverInfPath ".\km-printer-driver\KOBX9J__.inf" `
+    -DriverName "KONICA MINOLTA CommonDriver PCL" `
+    -PrinterName "Konika Minolta Printer Lot 3 CCHS HQ" `
+    -PrinterIP "192.168.1.150"
 
-# Main script execution
-Write-Host "PCL6 Printer Installation Script" -ForegroundColor Cyan
-Write-Host "===============================" -ForegroundColor Cyan
+Start-Sleep -Seconds 2
 
-# Prompt user for printer information
-do {
-    Write-Host "`nAdding a new printer:" -ForegroundColor Yellow
-    $printerName = Read-Host "Enter printer name (e.g. 'Office-Printer-1')"
-    $ipAddress = Read-Host "Enter printer IP address (e.g. '192.168.1.100')"
-    
-    # Generate port name from IP address if not provided
-    $portName = "IP_$($ipAddress -replace '\.', '_')"
-    
-    # Select printer driver
-    $driverName = Show-DriverMenu
-    
-    # Add the printer
-    $result = Add-PCL6Printer -PrinterName $printerName -DriverName $driverName -PortName $portName -IPAddress $ipAddress
-    
-    if ($result) {
-        # Set as default printer?
-        $setDefault = Read-Host "Do you want to set this printer as the default printer? (Y/N)"
-        if ($setDefault -eq "Y" -or $setDefault -eq "y") {
-            try {
-                Set-PrintConfiguration -PrinterName $printerName -Default
-                Write-Host "$printerName set as default printer." -ForegroundColor Green
-            }
-            catch {
-                Write-Host "Failed to set as default printer: $_" -ForegroundColor Red
-            }
-        }
-    }
-    
-    $addAnother = Read-Host "Do you want to add another printer? (Y/N)"
-} while ($addAnother -eq "Y" -or $addAnother -eq "y")
+# === SHARP PRINTER ===
+Install-Printer `
+    -DriverInfPath ".\sharp-printer-driver\ss0emenu.inf" `
+    -DriverName "SHARP MX-3140N PCL6" `
+    -PrinterName "Sharp Printer Lot 1 CCHS HQ" `
+    -PrinterIP "192.168.1.180"
 
-Write-Host "Printer setup completed!" -ForegroundColor Green
+Start-Sleep -Seconds 3
+
+Write-Host "Printers setup completed." -ForegroundColor Green
+# Write-Host "Press any key to exit..."
+# $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")

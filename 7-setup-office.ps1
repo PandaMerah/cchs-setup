@@ -15,8 +15,8 @@ if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 
     try {
         $p = [System.Diagnostics.Process]::Start($psi)
-        $p.WaitForExit()
-        exit $p.ExitCode
+        # $p.WaitForExit()
+        # exit $p.ExitCode
     }
     catch {
         Write-Warning "Failed to elevate. Try running the script as administrator manually."

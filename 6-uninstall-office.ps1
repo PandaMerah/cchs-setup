@@ -376,5 +376,5 @@ if ($remainingVersions.Count -eq 0) {
 
 Write-Host "`nMicrosoft Office removal process completed!" -ForegroundColor Green
 Write-Host "A system restart is highly recommended to complete the cleanup process." -ForegroundColor Yellow
-Write-Host "Press any key to exit..."
-$null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+# Write-Host "Press any key to exit..."
+# $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")

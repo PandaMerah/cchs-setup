@@ -75,24 +75,31 @@ function Set-MyTimezone {
 function Sync-InternetTime {
     try {
         # Configure Windows Time service to start automatically
+        Write-Host "Configuring Windows Time service..." -ForegroundColor Yellow
         Set-Service -Name W32Time -StartupType Automatic
 
         # Start the Windows Time service if it's not running
         $timeService = Get-Service -Name W32Time
         if ($timeService.Status -ne "Running") {
+            Write-Host "Starting Windows Time service..." -ForegroundColor Yellow
             Start-Service -Name W32Time
+            Start-Sleep -Seconds 2
         }
 
         # Configure NTP server
         Write-Host "Configuring NTP server..." -ForegroundColor Yellow
-        w32tm /config /syncfromflags:manual /manualpeerlist:"time.windows.com time.nist.gov" /update
+        $result = cmd /c "w32tm /config /syncfromflags:manual /manualpeerlist:`"time.windows.com time.nist.gov`" /update" 2>&1
+        Write-Host "NTP config result: $result" -ForegroundColor Cyan
 
         # Restart the Windows Time service to apply changes
+        Write-Host "Restarting Windows Time service..." -ForegroundColor Yellow
         Restart-Service -Name W32Time -Force
+        Start-Sleep -Seconds 3
 
         # Force time sync
         Write-Host "Synchronizing time with internet time servers..." -ForegroundColor Yellow
-        w32tm /resync /force
+        $syncResult = cmd /c "w32tm /resync /force" 2>&1
+        Write-Host "Sync result: $syncResult" -ForegroundColor Cyan
 
         Write-Host "Time synchronization completed." -ForegroundColor Green
         return $true
@@ -109,10 +116,27 @@ Write-Host "==============" -ForegroundColor Cyan
 
 $selectedTimezone = "Singapore Standard Time"
 
-# Auto set timezone without prompt
-Write-Host "Automatically setting timezone to: $selectedTimezone" -ForegroundColor Cyan
+# Set timezone
+Write-Host "Setting timezone to: $selectedTimezone" -ForegroundColor Cyan
+$timezoneResult = Set-MyTimezone -TimezoneId $selectedTimezone
 
-# Always sync time
+# Sync time
 Write-Host "Synchronizing time with internet time servers..." -ForegroundColor Cyan
+$syncResult = Sync-InternetTime
 
+# Display results
+Write-Host ""
+Write-Host "Results:" -ForegroundColor Cyan
+Write-Host "--------" -ForegroundColor Cyan
+Write-Host "Timezone set: $(if ($timezoneResult) { 'Success' } else { 'Failed' })" -ForegroundColor $(if ($timezoneResult) { 'Green' } else { 'Red' })
+Write-Host "Time sync: $(if ($syncResult) { 'Success' } else { 'Failed' })" -ForegroundColor $(if ($syncResult) { 'Green' } else { 'Red' })
+
+# Show current time and timezone
+$currentTime = Get-Date
+$currentTZ = Get-TimeZone
+Write-Host ""
+Write-Host "Current time: $currentTime" -ForegroundColor Yellow
+Write-Host "Current timezone: $($currentTZ.DisplayName)" -ForegroundColor Yellow
+
+Write-Host ""
 Write-Host "Timezone setup completed!" -ForegroundColor Green
